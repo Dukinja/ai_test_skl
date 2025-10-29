@@ -13,8 +13,10 @@ function game.init()
     bgi = love.graphics.newImage("images/background.png")
     orbi = love.graphics.newImage("images/orb.png")
     fire = love.audio.newSource("audio/testbolt.wav", "static")
+    aifire = love.audio.newSource("audio/woosh2.wav", "static")
     gameover = love.audio.newSource("audio/gameover.mp3", "stream")
     aidie = love.audio.newSource("audio/ai-die.wav", "static")
+    pldie = love.audio.newSource("audio/hurt.wav", "static")
     heart = love.graphics.newImage("images/heart.png")
     food.img = love.graphics.newImage("images/food.png")
     lfont = love.graphics.newFont(19)
@@ -29,20 +31,28 @@ function game.init()
     food.scale = 0.1
     food.w = food.img:getWidth() * food.scale
     food.h = food.img:getHeight() * food.scale
-    orb.speed = 900
+    orb.speed = 700
     orb.scale = 1
     orb.w = orbi:getWidth() * orb.scale
     orb.h = orbi:getHeight() * orb.scale
     orb.cooldown = 0
     food.timer = 0
-    food.spawntime = 2
+    food.spawntime = .7
 end
 
 function food.update(dt)
     food.timer = food.timer + dt
     if food.timer > food.spawntime then
-        local x = math.random(1, love.graphics.getWidth())
-        local y = math.random(1, love.graphics.getHeight())
+        local screenW = love.graphics.getWidth()
+        local screenH = love.graphics.getHeight()
+
+        local fw = food.w * food.scale
+        local fh = food.h * food.scale
+
+        local x = math.random(0, screenW - fw - 200)
+        local y = math.random(0, screenH - fh - 200
+    )
+
         local candy = {
             x = x,
             y = y,
@@ -71,7 +81,6 @@ function game.update(dt)
     if ai.timer > ai.simTime then
         table.remove(player.health, 1)
         ai.timer = 0
-        ai.generation = ai.generation + 1
     end
 
     if #player.health <= 0 then
@@ -100,9 +109,13 @@ function hud.draw()
         love.graphics.draw(heart, 10 + (i - 1) * 56, 10, nil, 0.2)
     end    
 
+    if debug == true then
+        love.graphics.setFont(lfont)
+        love.graphics.print("Debug mode: on", screenW/2, 10)
+    end
+
     love.graphics.setColor(1, 1, 1)
     love.graphics.setFont(lfont)
-    love.graphics.print("Generation: " .. ai.generation, 1780, 10)
     love.graphics.print("Time: " .. string.format("%.1f", ai.timer) .. "/" .. ai.simTime, 1780, 40)
     love.graphics.print("Population: " .. #population, 1780, 70)
 end
@@ -173,16 +186,16 @@ function game.checkRectCollision(x1, y1, w1, h1, x2, y2, w2, h2)
            y2 < y1 + h1
 end
 
-function game.findNearest(bot, list)
+function game.findNearest(object1, object2)
     local nearest, minDist = nil, math.huge
-    for _, obj in ipairs(list) do
-        local dx = obj.x - bot.x
-        local dy = obj.y - bot.y
+    for _, obj in ipairs(object2) do
+        local dx = obj.x - object1.x
+        local dy = obj.y - object1.y
         local dist = dx*dx + dy*dy
         if dist < minDist then
             minDist = dist
             nearest = obj
         end
     end
-    return nearest or {x = bot.x, y = bot.y}
+    return nearest or {x = object1.x, y = object1.y}
 end

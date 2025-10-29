@@ -6,12 +6,16 @@ function player.init()
 
     walk = love.audio.newSource("audio/walk.mp3", "static")
 
+    player.fireRate = 1
+    player.fireTimer = 0
+
     player.x = 1920/2
     player.y = 1080/2
     player.speed = 3
     player.w = 12
     player.h = 18
     player.scale = 6
+    player.speeda = 350
 
     player.death = false
 
@@ -55,8 +59,74 @@ function player.die()
 end
 
 function player.update(dt)
+    if player.isAI == true then
 
-    player.isMoving = false
+
+        local nearestFood = game.findNearest(player, foods)
+        local nearestOrb = game.findNearest(player, orbs)
+        
+        local dxF = nearestFood.x - player.x
+        local dyF = nearestFood.y - player.y
+        local distF = math.sqrt(dxF * dxF + dyF * dyF)
+        
+        local dxO = nearestOrb.x - player.x
+        local dyO = nearestOrb.y - player.y
+        local distO = math.sqrt(dxO * dxO + dyO * dyO)
+
+        local moveX, moveY = 0, 0
+
+        if distF > 0 then
+            moveX = (dxF / distF) * player.speeda * dt
+            moveY = (dyF / distF) * player.speeda * dt
+        else
+            moveX = player.speeda * dt
+            moveY = player.speeda * dt
+        end
+        
+        player.x = player.x + moveX
+        player.y = player.y + moveY
+
+        if math.abs(moveX) > math.abs(moveY) then
+            if moveX > 0 then dir = "right"
+            else dir = "left" end
+        else
+            if moveY > 0 then dir = "down"
+            else dir = "up" end
+        end
+
+        player.isMoving = true
+
+        if player.direction ~= dir then
+            player.direction = dir
+            player.anim = player.animations[dir]
+        end
+
+        player.fireTimer = player.fireTimer - dt
+
+        for _, creature in ipairs(population) do
+
+            local nearest = game.findNearest(player, creature)
+            if not nearest then return end
+        
+            local dx = nearest.x - player.x
+            local dy = nearest.y - player.y
+            local dist = math.sqrt(dx * dx + dy * dy)
+        
+            local range = 300
+            if dist > range then return end
+        
+            if math.random(0, 6000) == 6000 and player.fireTimer <= 0 then
+                orb.fire(player.x, player.y, dx, dy)
+                player.fireTimer = player.fireRate
+            end
+
+        end
+
+    end
+
+    if player.isAI == false then
+        player.isMoving = false
+    end
 
     for i, f in ipairs(foods) do
         local playerW = player.w * player.scale

@@ -1,4 +1,7 @@
+require("code/player")
+
 debug = true
+player.isAI = false
 
 function love.conf(t)
     t.version = "11.5"                   -- LÖVE version

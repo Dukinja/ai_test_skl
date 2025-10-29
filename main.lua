@@ -1,8 +1,8 @@
-require("code/player")
-require("code/ai")
-require("code/game")
-
 function love.load()
+    math.randomseed(os.time())
+    require("code/player")
+    require("code/ai")
+    require("code/game")
     game.init()
     player.init()
     ai.init()

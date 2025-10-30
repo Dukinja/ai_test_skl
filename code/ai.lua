@@ -12,7 +12,7 @@ function ai.init()
     ai.shootCooldown = 1.5
 
     ai.populationSize = 2
-    ai.maxPopulation = 6
+    ai.maxPopulation = 7
     ai.simTime = 6
 
     ai.population = {}

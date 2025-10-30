@@ -9,15 +9,16 @@ function player.init()
     player.fireRate = 1
     player.fireTimer = 0
 
-    player.x = 1920/2
-    player.y = 1080/2
+    player.x = screenW/2
+    player.y = screenH/2
     player.speed = 3
     player.w = 12
     player.h = 18
     player.scale = 6
-    player.speeda = 350
+    player.speeda = 330
 
     player.death = false
+    player.won = false
 
     player.isMoving = false
     player.direction = "left"
@@ -44,13 +45,22 @@ function player.draw()
         love.graphics.setFont(nfont)
         love.graphics.setColor(0, 0, 1)
         love.graphics.rectangle("line", player.x, player.y, player.w, player.h)
-        love.graphics.print(player.x .. "," .. player.y .. "," .. player.direction, player.x+15, player.y-10)
+        love.graphics.print(string.format("%.1f", player.x) .. "," .. string.format("%.1f", player.y) .. "," .. player.direction, player.x+15, player.y-10)
         love.graphics.setColor(1, 1, 1)
     end
 end
 
 function player.die()
     gameover:play()
+    function love.keypressed(key)
+        if key == "r" then
+            love.event.quit("restart")
+        end
+    end
+end
+
+function player.win()
+    won:play()
     function love.keypressed(key)
         if key == "r" then
             love.event.quit("restart")
@@ -75,12 +85,44 @@ function player.update(dt)
 
         local moveX, moveY = 0, 0
 
-        if distF > 0 then
+        if #player.health < 6 and distF > 0 then
             moveX = (dxF / distF) * player.speeda * dt
             moveY = (dyF / distF) * player.speeda * dt
         else
-            moveX = player.speeda * dt
-            moveY = player.speeda * dt
+            local nearestBot = game.findNearest(player, population)
+
+            if nearestBot then
+                local dx = nearestBot.x - player.x
+                local dy = nearestBot.y - player.y
+                local dist = math.sqrt(dx * dx + dy * dy)
+            
+                player.wanderTimer = (player.wanderTimer or 0) - dt
+                player.wanderAngle = player.wanderAngle or math.random() * math.pi * 2
+            
+                if dist > 250 then
+                    moveX = (dx / dist) * player.speeda * dt
+                    moveY = (dy / dist) * player.speeda * dt
+            
+                else
+                    if player.wanderTimer <= 0 then
+                        player.targetWanderAngle = math.random() * math.pi * 2
+                        player.wanderTimer = 1.5 + math.random()
+                    end
+            
+                    player.wanderAngle = player.wanderAngle + (player.targetWanderAngle - player.wanderAngle) * dt * 1.5
+            
+                    local wanderRadius = 180
+                    local wanderStrength = 0.6
+            
+                    local wanderX = math.cos(player.wanderAngle) * wanderRadius
+                    local wanderY = math.sin(player.wanderAngle) * wanderRadius
+            
+                    moveX = ((dx / dist) * wanderStrength + wanderX / wanderRadius * (1 - wanderStrength)) * player.speeda * dt
+                    moveY = ((dy / dist) * wanderStrength + wanderY / wanderRadius * (1 - wanderStrength)) * player.speeda * dt
+                end
+            else
+                moveX, moveY = 0, 0
+            end
         end
         
         player.x = player.x + moveX
@@ -115,7 +157,7 @@ function player.update(dt)
             local range = 300
             if dist > range then return end
         
-            if math.random(0, 6000) == 6000 and player.fireTimer <= 0 then
+            if math.random(0, 600) == 600 and player.fireTimer <= 0 then
                 orb.fire(player.x, player.y, dx, dy)
                 player.fireTimer = player.fireRate
             end
@@ -136,8 +178,10 @@ function player.update(dt)
            player.x + playerW > f.x and
            player.y < f.y + food.h and
            player.y + playerH > f.y then
-            table.remove(foods, i)
-            table.insert(player.health, "health")
+            if #player.health < 6 then
+                table.remove(foods, i)
+                table.insert(player.health, "health")
+            end
             break
         end
     end

@@ -5,6 +5,10 @@ orbs = {}
 hud = {}
 food = {}
 foods = {}
+box = {}
+shard = {}
+walls = {}
+shards = {}
 
 function game.init()
     screenW = love.graphics.getWidth()
@@ -15,14 +19,18 @@ function game.init()
     fire = love.audio.newSource("audio/testbolt.wav", "static")
     aifire = love.audio.newSource("audio/woosh2.wav", "static")
     gameover = love.audio.newSource("audio/gameover.mp3", "stream")
+    won = love.audio.newSource("audio/won.wav", "stream")
     aidie = love.audio.newSource("audio/ai-die.wav", "static")
     pldie = love.audio.newSource("audio/hurt.wav", "static")
     heart = love.graphics.newImage("images/heart.png")
     food.img = love.graphics.newImage("images/food.png")
+    box.img = love.graphics.newImage("image/box.png")
+    shard.img = love.graphics.newImage("image/shard.png")
     lfont = love.graphics.newFont(19)
     nfont = love.graphics.newFont(12)
     dfont = love.graphics.newFont(30)
     deathmsg1 = "You Died!"
+    wonmsg1 = "You Won!"
     deathmsg2 = "Press R to restart."
     w1 = dfont:getWidth(deathmsg1)
     w2 = dfont:getWidth(deathmsg2)
@@ -41,6 +49,7 @@ function game.init()
 end
 
 function food.update(dt)
+
     food.timer = food.timer + dt
     if food.timer > food.spawntime then
         local screenW = love.graphics.getWidth()
@@ -49,9 +58,8 @@ function food.update(dt)
         local fw = food.w * food.scale
         local fh = food.h * food.scale
 
-        local x = math.random(0, screenW - fw - 200)
-        local y = math.random(0, screenH - fh - 200
-    )
+            local x = math.random(0, screenW - fw - 250)
+            local y = math.random(0, screenH - fh - 250)
 
         local candy = {
             x = x,
@@ -86,7 +94,13 @@ function game.update(dt)
     if #player.health <= 0 then
         player.death = true
         player.die()
-    end    
+    end
+
+    if #population <= 0 then
+        player.won = true
+        player.win()
+    end
+
 end
 
 function bg.draw()
@@ -101,7 +115,13 @@ function game.drawdeathscreen()
     love.graphics.setFont(dfont)
     love.graphics.print(deathmsg1, (screenW - w1) / 2, (screenH - h) / 2)
     love.graphics.print(deathmsg2, (screenW - w2) / 2, (screenH - h) / 2 + 80)
-    
+end
+
+function game.drawwinscreen()
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.setFont(dfont)
+    love.graphics.print(wonmsg1, (screenW - w1) / 2, (screenH - h) / 2)
+    love.graphics.print(deathmsg2, (screenW - w2) / 2, (screenH - h) / 2 + 80)
 end
 
 function hud.draw()

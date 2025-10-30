@@ -6,11 +6,13 @@ function ai.init()
     ai.w = ai.img:getWidth() * ai.scale
     ai.h = ai.img:getHeight() * ai.scale
 
+    rrrr = false
+
     ai.orbs = {}
     ai.shootCooldown = 1.5
 
-    ai.populationSize = 1
-    ai.maxPopulation = 15
+    ai.populationSize = 2
+    ai.maxPopulation = 6
     ai.simTime = 6
 
     ai.population = {}
@@ -33,6 +35,7 @@ function ai.initPopulation()
 end
 
 function ai.update(dt)
+
     if ai.timer < ai.simTime then
         for _, creature in ipairs(population) do
             local nearestFood = game.findNearest(creature, foods)
@@ -79,7 +82,7 @@ function ai.update(dt)
             end
 
             creature.shootTimer = creature.shootTimer - dt
-            if math.random(1, 6000) == 6000 and creature.shootTimer <= 0 then
+            if math.random(1, 1800) == 1800 and creature.shootTimer <= 0 then
                 creature.shootTimer = ai.shootCooldown
 
                 local dx = player.x - creature.x
@@ -112,7 +115,7 @@ function ai.update(dt)
         
                 if dist < botRadius + foodRadius then
                     table.remove(foods, i)
-                    if #population < ai.maxPopulation then
+                    if #population < ai.maxPopulation and rrrr == false then
                         bot.fitness = bot.fitness + 1
                             table.insert(population, {
                                 x = math.random(1, screenW),
@@ -122,6 +125,9 @@ function ai.update(dt)
                                 fitness = 0,
                                 shootTimer = math.random() * ai.shootCooldown
                             })
+                        if #population == ai.maxPopulation then
+                            rrrr = true
+                        end
                     end
                 break
             end
